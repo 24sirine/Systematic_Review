@@ -1,0 +1,25 @@
+PREFIX dblp: <https://dblp.org/rdf/schema#>
+PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?pub
+WHERE {
+  ?pub dblp:title ?title ;
+       dblp:yearOfPublication ?year .
+
+  BIND(xsd:integer(STR(?year)) AS ?y)
+  FILTER(?y >= 1995 && ?y <= 2026)
+
+  BIND(LCASE(STR(?title)) AS ?t)
+
+  # ABAC title-only filter:
+  FILTER(
+    (
+      CONTAINS(?t, "attribute based access control") ||
+      CONTAINS(?t, "attribute-based access control") ||
+      regex(?t, "\\babac\\b")
+    )
+  )
+}
+ORDER BY ?pub
+LIMIT __LIMIT__
+OFFSET __OFFSET__

@@ -1,0 +1,36 @@
+PREFIX dblp: <https://dblp.org/rdf/schema#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT
+  ?pub
+  (SAMPLE(?title) AS ?title_s)
+  (SAMPLE(?year) AS ?year_s)
+  (SAMPLE(?doi) AS ?doi_s)
+  (GROUP_CONCAT(DISTINCT ?venueTitle; separator="; ") AS ?venues)
+  (SAMPLE(?doc) AS ?doc_s)
+  (GROUP_CONCAT(DISTINCT ?authorName; separator="; ") AS ?authors)
+WHERE {
+  VALUES ?pub { __VALUES__ }
+
+  ?pub dblp:title ?title ;
+       dblp:yearOfPublication ?year .
+
+  OPTIONAL { ?pub dblp:doi ?doi . }
+
+  OPTIONAL {
+    ?pub dblp:publishedInStream ?venue .
+    OPTIONAL { ?venue dblp:primaryStreamTitle ?venueTitle . }
+  }
+
+  OPTIONAL { ?pub dblp:primaryDocumentPage ?doc . }
+
+  OPTIONAL {
+    ?pub dblp:authoredBy ?person .
+    OPTIONAL { ?person dblp:primaryCreatorName ?n1 . }
+    OPTIONAL { ?person dblp:creatorName ?n2 . }
+    OPTIONAL { ?person rdfs:label ?n3 . }
+    BIND(COALESCE(?n1, ?n2, ?n3) AS ?authorName)
+    FILTER(BOUND(?authorName))
+  }
+}
+GROUP BY ?pub
