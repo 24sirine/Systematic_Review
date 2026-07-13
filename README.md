@@ -7,14 +7,18 @@ As a case of study, the pipeline has been applied to the **Attribute-Based Acces
 # Pipeline Overview
 
 The complete workflow consists of the following main steps:
-<img width="921" height="201" alt="ABAC_WORKFLOW_ANG" src="https://github.com/user-attachments/assets/e46dfe91-da90-4314-802c-bd5479fc1142" />
-
 1. Multi-source literature collection
 2. Data merging and deduplication
 3. Manual abstract completion
 4. LLM-based pre-screening
 5. LLM performance evaluation
 6. Manual validation and final selection
+
+   
+The following figure presents the ABAC-focused workflow, which presents the progressive filtering process and the reduction in the number of papers at each stage, from the initial search results to the final selected studies.
+<img width="921" height="201" alt="ABAC_WORKFLOW_ANG" src="https://github.com/user-attachments/assets/e46dfe91-da90-4314-802c-bd5479fc1142" />
+
+
    
 ---
 
@@ -29,30 +33,37 @@ The collected publications are filtered using keyword-based matching on titles a
 ## Semantic Scholar Retrieval
 **Script:** s2_fetch_clean_csv.py <br>
 **Example execution:**
-python s2_fetch_clean_csv.py \
---query "(\"attribute based access control\" | \"attribute-based access control\" | ABAC) + (\"access control\")" \
---terms "attribute based access control,attribute-based access control,abac,access control" \
---mode any \
---year "1995-" \
---out abac_s2.csv <br>
+```bash
+python s2_fetch_clean_csv.py 
+--query "(\"attribute based access control\" | \"attribute-based access control\" | ABAC) + (\"access control\")" 
+--terms "attribute based access control,attribute-based access control,abac,access control" 
+--mode any 
+--year "1995-" 
+--out abac_s2.csv 
+```
 **Output:** abac_s2.csv
 
 ## OpenAlex Retrieval
 **Script:** openalex_fetch_clean_csv.py <br>
 **Example execution:**
-python openalex_fetch_clean_csv.py \
---search "attribute based access control attribute-based access control ABAC access control" \
---terms "attribute based access control,attribute-based access control,abac,access control" \
---mode any \
---from-year 1995 \
---to-year 2026 \
---no-cs-only \
---out abac_openalex.csv <br>
+```bash
+python openalex_fetch_clean_csv.py 
+--search "attribute based access control attribute-based access control ABAC access control" 
+--terms "attribute based access control,attribute-based access control,abac,access control" 
+--mode any 
+--from-year 1995 
+--to-year 2026 
+--no-cs-only 
+--out abac_openalex.csv 
+```
 **Output:** abac_openalex.csv
 
 ## DBLP Retrieval
 **Script:** dblp_fetch_clean_csv.py <br>
-**Example execution:** python dblp_fetch_clean_csv.py abac_dblp <br>
+**Example execution:** 
+```bash
+python dblp_fetch_clean_csv.py abac_dblp 
+```
 **Output:** abac_dblp.csv
 
 
@@ -60,7 +71,10 @@ python openalex_fetch_clean_csv.py \
 Since the same publication may appear across multiple bibliographic sources with slightly different metadata, a data fusion strategy is applied to consolidate all retrieved records into a single dataset. Duplicate detection is primarily performed through DOI matching whenever a DOI is available. For publications without DOI information, records are compared using normalized titles and publication years. When duplicate entries are identified with inconsistent publication years, the most recent version of the publication is retained.
 
 **Script:** merge_all_clean_csv.py <br>
-**Example execution:** python merge_all_clean_csv.py --basename abac <br>
+**Example execution:** 
+```bash
+python merge_all_clean_csv.py --basename abac
+```
 **Output:** abac_merged.xlsx
 
 # 3. Manual abstract completion
@@ -75,9 +89,21 @@ This script communicates with a locally running ollama server, which is configur
 **Important:** This step requires Ollama to be installed and running locally on your machine, you can follow the instructions on the official website : https://ollama.com/
 
 **Script:** llm_filtering.py <br>
-**Execution:** python llm_filtering.py --input abac_merged_completed.xlsx --output paper_screened_final_abac.xlsx <br>
+**Example Execution:**
+```bash
+python llm_filtering.py --input abac_merged_completed.xlsx --output paper_screened_final_abac.xlsx
+```
 **Output:** paper_screened_final_abac.xlsx
 
 # 5. LLM performance evaluation
+In this step, an evaluation was conducted on a subset of 173 articles that had been previously classified manually, in order to measure the agreement between the automated selection (papers_llm_screened_abac_subset.xlsx) and the human selection (tri_papers_manuelle_subset.xlsx).<br>
+
+**Script:**  compare_llm_vs_manual.py <br>
+**Execution:** 
+```bash
+python compare_llm_vs_manual.py
+```
+**Output:** comparaison_ligne_par_ligne_llm_vs_manual.xlsx
+
 # 6. Manual validation and final selection
 Although LLM-based filtering significantly reduces the screening workload, manual validation remains necessary. This final review step consists of : checking inaccessible papers, removing informal publications and confirming relevance according to research objectives.
